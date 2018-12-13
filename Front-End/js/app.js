@@ -1,7 +1,7 @@
 var domain = "https://localhost:5001/";
 var endpoint = "api/cities";
 $("#addCityBtn").click((event) => {
-    AddCity(event)
+    AddCity(event);
 });
 $("#GetAllCities").click(GetCities);
 //containers
@@ -9,7 +9,6 @@ var homePage = $("#HomePage");
 var addCityPage = $("#AddCityPage");
 var showCitiesPage = $("#ShowAllCitiesPage");
 var tableBody = $("#tableBody");
-
 
 // navbar
 var homeLink = $("#homeLink").click(() => {
@@ -23,18 +22,48 @@ var showCitiesLink = $("#showCitiesLink")
         ShowPages(0, 0, 1);
     });
 
+//Notifications
+let loadingBox = $("#loadingBox");
+let infoBox = $("#infoBox");
+let errorBox = $("#errorBox");
 
+
+// Bussiness logic
 function GetCities() {
     tableBody.empty();
-    $.get(domain + endpoint, function (data) {
+    $.get(domain + endpoint, function (cityData) {
+        for (let i = 0; i < cityData.length; i++) {
 
-        for (var i = 0; i < data.length; i++) {
-            var th = $("<th>").attr("scope", "row").text(i);
-            var tdCountryName = $("<td>").text(data[i].country);
-            var tdCityName = $("<td>").text(data[i].name);
-            var tdPopulation = $("<td>").text(data[i].population);
+            let cityId = cityData[i].cityId;
+            let cityName = cityData[i].name;
+            let cityPopulation = cityData[i].population;
 
-            tableBody.append($("<tr>").append(th, tdCountryName, tdCityName, tdPopulation));
+            let row = $("<tr>");
+            let th = $("<th>").attr("scope", "row").text(cityId);
+            let tdCityName = $("<td>").text(cityName);
+            let tdPopulation = $("<td>").text(cityPopulation);
+
+            let deleteBtn = $("<button>").text("[Delete]").addClass("btn m-0").click(function (e) {
+                $.ajax({
+                    type: "DELETE",
+                    url: domain + endpoint + `/${cityName}`,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(cityData[i]),
+                    dataType: "json",
+                    success: function () {
+                        notifications.showInfo(`City ${cityName} deleted.`);
+                    },
+                    error: function () {
+                        notifications.showError(`Cannot delete City ${cityName}.`);
+                    },
+                });
+                console.log($(this).parent().remove());
+            });
+
+            row.append(th, tdCityName, tdPopulation, deleteBtn);
+            tableBody.append(row);
         }
     });
 }
@@ -44,27 +73,25 @@ function AddCity(event) {
     var inputs = addCityPage.find("form input").select(x => $(x).val());
     var city = {
         name: inputs[0].value,
-        country: inputs[1].value,
-        population: inputs[2].value
+        population: inputs[1].value
     };
     $.ajax({
         type: "POST",
         url: domain + endpoint,
-        headers: { 
-            'Content-Type': 'application/json' 
+        headers: {
+            'Content-Type': 'application/json'
         },
         data: JSON.stringify(city),
-        dataType:"json",
-        success: function(data){
-            console.log("City Added");
+        dataType: "json",
+        success: function (data) {
+            $(inputs[0]).val("");
+            $(inputs[1]).val("");
+            notifications.showInfo("City added.");
         },
-        error: function(){
-            console.log("post city Failed");
+        error: function () {
+            notifications.showError("Cannot delete City " + city.name);
         },
     });
-    //$.post(domain + endpoint,city,function (data) {
-    //    console.log(data);
-    //});
 }
 
 function ShowPages(home, addcity, allcities) {
@@ -72,3 +99,12 @@ function ShowPages(home, addcity, allcities) {
     addcity === 1 ? addCityPage.attr("hidden", false).addClass("active") : addCityPage.attr("hidden", true).removeClass("active");
     allcities === 1 ? showCitiesPage.attr("hidden", false).addClass("active") : showCitiesPage.attr("hidden", true).removeClass("active");
 }
+
+$(document).on({
+    ajaxStart: function () {
+        loadingBox.show();
+    },
+    ajaxStop: function () {
+        loadingBox.hide();
+    }
+});
