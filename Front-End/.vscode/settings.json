@@ -1,0 +1,4 @@
+{
+    "editor.mouseWheelZoom": true,
+    "jshint.options": {"esversion": 6},
+}
