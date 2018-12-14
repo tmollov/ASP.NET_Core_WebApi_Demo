@@ -1,4 +1,15 @@
 const notifications = (function () {
+    function handleError(response) {
+        let errorMsg = JSON.stringify(response);
+        if (response.readyState === 0) {
+            errorMsg = Messages.networkError;
+        }
+        if (response.responseJSON && response.responseJSON.description) {
+            errorMsg = response.responseJSON.description;
+        }
+        showError(errorMsg);
+    }
+
     function showInfo(message) {
         infoBox.find("span").text(message);
         infoBox.show();
@@ -14,5 +25,5 @@ const notifications = (function () {
             errorBox.hide();
         });
     }
-    return {showInfo,showError};
+    return {handleError,showInfo,showError};
 })();
