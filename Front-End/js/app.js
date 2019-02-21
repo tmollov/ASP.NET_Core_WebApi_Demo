@@ -30,7 +30,7 @@ let errorBox = $("#errorBox");
 
 // Bussiness logic
 function GetCities() {
-    tableBody.empty();
+    let cities = new Array();
     $.get(domain + endpoint, function (cityData) {
         for (let i = 0; i < cityData.length; i++) {
 
@@ -63,7 +63,13 @@ function GetCities() {
             });
 
             row.append(th, tdCityName, tdPopulation, deleteBtn);
-            tableBody.append(row);
+            cities.push(row);
+        }
+
+        tableBody.empty();
+
+        for (let i = 0; i < cities.length; i++) {
+            tableBody.append(cities[i]);
         }
     });
 }
